@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokeRoller - Pokemon Card Pack Opener</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Music Player -->
+    <audio id="background-music" loop>
+        <source src="background-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Music Control Button -->
+    <div id="music-control" class="music-control">
+        <button id="music-toggle" class="music-btn">🎵</button>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <div class="logo-container">
+                <img src="pokeroller-logo.png" alt="PokeRoller" class="fancy-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="fancy-logo-fallback" style="display:none;">PokeRoller</div>
+            </div>
+            <div class="login-subtitle">
+                <h2>Gotta Roll 'Em All!</h2>
+                <p>Open Pokémon card packs to discover new cards, expand your collection, and unlock exciting opportunities to trade with friends and challenge opponents in thrilling auto battles!</p>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Trainer Name" required>
+                    <div class="input-icon trainer-sprite"></div>
+                </div>
+                <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+                    <div class="input-icon trainer-sprite"></div>
+                </div>
+                <div class="button-group">
+                    <button id="login-btn" class="pokemon-btn login-btn">
+                        <span class="btn-icon pokeball-icon"></span>
+                        <span class="btn-text">Start Adventure</span>
+                    </button>
+                    <button id="register-btn" class="pokemon-btn register-btn">
+                        <span class="btn-icon pokeball-icon"></span>
+                        <span class="btn-text">Register</span>
+                    </button>
+                </div>
+                <div id="registration-success" class="registration-success hidden">
+                    <span class="success-icon">✅</span>
+                    <span class="success-text">Registration successful! You can now log in.</span>
+                </div>
+                <div id="registration-error" class="registration-error hidden">
+                    <span class="error-icon">❌</span>
+                    <span class="error-text">That user is already registered</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+        <div class="header">
+            <div class="header-logo">
+                <img src="pokeroller-header-logo.png" alt="PokeRoller" class="header-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <h1 class="header-logo-fallback" style="display:none;">PokeRoller</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar-container">
+                    <div id="user-avatar" class="user-avatar"></div>
+                    <span id="username-display"></span>
+                    <div id="user-title-display" class="user-title-display"></div>
+                </div>
+                <div class="coin-display-container">
+                    <span class="coin-icon">🪙</span>
+                    <span id="coin-display">3</span>
+                </div>
+                <div class="user-actions">
+                    <button id="avatar-select-btn" class="avatar-btn" title="Change Avatar">👤</button>
+                    <button id="inventory-btn" class="inventory-btn" title="Inventory">🎒</button>
+                    <button id="shop-btn" class="shop-btn" title="Shop">🛒</button>
+                    <button id="achievements-btn" class="achievements-btn" title="Achievements">🏆</button>
+                    <button id="feedback-btn" class="feedback-btn" title="Send Feedback">📝</button>
+                    <button id="friends-btn" class="pokemon-btn friends-btn" title="Friends">
+                        <span class="btn-icon">👥</span>
+                        <span class="btn-text">Friends</span>
+                        <span id="friends-notification-badge" class="notification-badge hidden">!</span>
+                    </button>
+                    <button id="admin-add-coin-btn" class="admin-btn" title="Add 1 Coin (Admin)">🪙+</button>
+                    <button id="logout-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-container">
+            <div class="stats-panel">
+                <div class="stat-card" id="level-xp-card">
+                    <div class="level-xp-header">
+                        <span id="level-display">Level 1</span>
+                        <div class="xp-bar-container">
+                            <div id="xp-bar" class="xp-bar"><div id="xp-bar-fill" class="xp-bar-fill"></div></div>
+                            <span id="xp-bar-label">0 / 25 XP</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="progress-header">
+                        <h3>Pokedex Progress</h3>
+                        <div class="progress-toggle">
+                            <input type="checkbox" id="exclude-shinies-toggle">
+                            <label for="exclude-shinies-toggle">Exclude Shinies</label>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p><span id="caught-count">0</span> / <span id="total-count">2050</span></p>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Packs Opened</h3>
+                    <p id="packs-opened">0</p>
+                </div>
+                
+                <div class="stat-card" id="cards-collected-card">
+                    <h3>Cards Collected</h3>
+                    <p id="cards-collected">0</p>
+                    <div class="rarity-breakdown hidden" id="rarity-breakdown">
+                        <div class="rarity-stat">
+                            <span class="rarity-label common">Common:</span>
+                            <span class="rarity-count" id="common-count">0/0</span>
+                        </div>
+                        <div class="rarity-stat">
+                            <span class="rarity-label uncommon">Uncommon:</span>
+                            <span class="rarity-count" id="uncommon-count">0/0</span>
+                        </div>
+                        <div class="rarity-stat">
+                            <span class="rarity-label rare">Rare:</span>
+                            <span class="rarity-count" id="rare-count">0/0</span>
+                        </div>
+                        <div class="rarity-stat">
+                            <span class="rarity-label legendary">Legendary:</span>
+                            <span class="rarity-count" id="legendary-count">0/0</span>
+                        </div>
+                        <div class="rarity-stat">
+                            <span class="rarity-label shiny">Shiny:</span>
+                            <span class="rarity-count" id="shiny-count">0/0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pack-opening-area">
+                <div class="pack-container">
+                    <button id="roll-btn" class="pokeball-btn" aria-label="Open a Pokemon Card Pack">
+                        <span class="pokeball-icon">
+                            <span class="pokeball-side-line pokeball-side-line-left"></span>
+                            <span class="pokeball-side-line pokeball-side-line-right"></span>
+                            <span class="pokeball-midline"></span>
+                            <span class="pokeball-label">Roll</span>
+                            <span class="pokeball-highlight"></span>
+                        </span>
+                    </button>
+                </div>
+                
+                <div id="cards-reveal" class="cards-reveal hidden">
+                    <h3>You got:</h3>
+                    <div id="cards-container" class="cards-container"></div>
+                    <button id="open-another-btn">Open Another Pack</button>
+                </div>
+            </div>
+            
+            <!-- Card Reveal Overlay -->
+            <div id="card-overlay" class="card-overlay hidden">
+                <div class="overlay-content">
+                    <div id="overlay-cards-container" class="overlay-cards-container"></div>
+                    <button id="continue-btn" class="continue-btn hidden">Continue</button>
+                </div>
+            </div>
+            
+            <div class="pokedex-panel">
+                <div class="recent-catches-header">
+                    <h3>Recent Catches</h3>
+                    <div class="recent-catches-toggle">
+                        <input type="checkbox" id="new-only-toggle">
+                        <label for="new-only-toggle">New Only</label>
+                    </div>
+                </div>
+                <div class="recent-catches">
+                    <div class="recent-catches-scroll" id="recent-catches"></div>
+                </div>
+                <div class="pokedex-link" id="view-pokedex-btn">Pokédex</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Inventory Bar -->
+    <div id="bottom-inventory-bar" class="bottom-inventory-bar hidden">
+        <button id="bottom-inventory-bag" class="bottom-inventory-bag" title="Open Inventory">🎒</button>
+        <div id="bottom-inventory-items" class="bottom-inventory-items hidden">
+            <!-- Inventory items will be dynamically populated here -->
+        </div>
+    </div>
+
+    <!-- Pokedex Screen -->
+    <div id="pokedex-screen" class="screen hidden">
+        <div class="header">
+            <h1>Pokedex</h1>
+            <button id="back-to-game-btn">Back to Game</button>
+        </div>
+        
+        <div class="pokedex-container">
+            <div class="pokedex-filters">
+                <input type="text" id="search-pokemon" placeholder="Search Pokemon...">
+                <select id="generation-filter">
+                    <option value="all">All Generations</option>
+                    <option value="1">Generation I (1-151)</option>
+                    <option value="2">Generation II (152-251)</option>
+                    <option value="3">Generation III (252-386)</option>
+                    <option value="4">Generation IV (387-493)</option>
+                    <option value="5">Generation V (494-649)</option>
+                    <option value="6">Generation VI (650-721)</option>
+                    <option value="7">Generation VII (722-809)</option>
+                    <option value="8">Generation VIII (810-905)</option>
+                    <option value="9">Generation IX (906-1025)</option>
+                    <option value="shiny">✨ Shinies</option>
+                </select>
+                <select id="rarity-filter">
+                    <option value="all">All Rarities</option>
+                    <option value="common">Common</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="rare">Rare</option>
+                    <option value="legendary">Legendary</option>
+                </select>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="show-caught-only">
+                    <label for="show-caught-only">Show only caught Pokémon</label>
+                </div>
+                <div class="filter-checkbox favorites-filter">
+                    <input type="checkbox" id="show-favorites-only">
+                    <label for="show-favorites-only">Show only <span class="favorites-word">favorites</span></label>
+                </div>
+            </div>
+            
+            <div id="pokedex-grid" class="pokedex-grid"></div>
+        </div>
+    </div>
+
+    <!-- Feedback Screen -->
+    <div id="feedback-screen" class="screen hidden">
+        <div class="header">
+            <h1>Send Feedback</h1>
+            <button id="back-to-game-from-feedback-btn">Back to Game</button>
+        </div>
+        
+        <div class="feedback-container">
+            <div class="feedback-header">
+                <h2>Help Us Improve PokeRoller!</h2>
+                <p>Found a bug? Have a feature request? We'd love to hear from you!</p>
+            </div>
+            
+            <form id="feedback-form" class="feedback-form">
+                <div class="feedback-input-group">
+                    <label for="feedback-subject">Subject:</label>
+                    <input type="text" id="feedback-subject" placeholder="Brief description of your feedback" required>
+                </div>
+                
+                <div class="feedback-input-group">
+                    <label for="feedback-message">Message:</label>
+                    <textarea id="feedback-message" placeholder="Please provide detailed information about your bug report or feature request..." required rows="8"></textarea>
+                </div>
+                
+                <div class="feedback-type-group">
+                    <label>Type:</label>
+                    <div class="feedback-type-options">
+                        <label class="feedback-type-option">
+                            <input type="radio" name="feedback-type" value="bug" checked>
+                            <span>🐛 Bug Report</span>
+                        </label>
+                        <label class="feedback-type-option">
+                            <input type="radio" name="feedback-type" value="feature">
+                            <span>💡 Feature Request</span>
+                        </label>
+                        <label class="feedback-type-option">
+                            <input type="radio" name="feedback-type" value="other">
+                            <span>📝 Other</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-feedback-btn">
+                    <span class="btn-icon">📤</span>
+                    <span class="btn-text">Send Feedback</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Shop Screen -->
+    <div id="shop-screen" class="screen hidden">
+        <div class="header">
+            <h1>Shop</h1>
+            <button id="back-to-game-from-shop-btn">Back to Game</button>
+        </div>
+        
+        <div class="shop-container">
+            <div class="shop-header">
+                <h2>PokéMart</h2>
+                <p>Use your hard-earned coins to purchase powerful items that will enhance your Pokémon collection journey!</p>
+            </div>
+            
+            <div class="shop-categories">
+                <button class="category-btn active" data-category="all">All Items</button>
+                <button class="category-btn" data-category="pokeballs">Poké Balls</button>
+                <button class="category-btn" data-category="potions">Potions</button>
+                <button class="category-btn" data-category="special">Special Items</button>
+            </div>
+            
+            <div class="shop-items">
+                <!-- Shop items will be added here in the future -->
+            </div>
+            
+            <div class="shop-footer">
+                <p class="shop-note">💡 Tip: Items you purchase will be stored in your inventory (🎒) where you can use them during gameplay!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Screen -->
+    <div id="inventory-screen" class="screen hidden">
+        <div class="header">
+            <h1>Inventory</h1>
+            <button id="back-to-game-from-inventory-btn">Back to Game</button>
+        </div>
+        
+        <div class="inventory-container">
+            <div class="inventory-header">
+                <h2>Your Items</h2>
+                <p>Manage your purchased items and use them in the game.</p>
+            </div>
+            
+            <div class="inventory-categories">
+                <button class="inventory-category-btn active" data-category="all">All Items</button>
+                <button class="inventory-category-btn" data-category="pokeballs">Poké Balls</button>
+                <button class="inventory-category-btn" data-category="potions">Potions</button>
+                <button class="inventory-category-btn" data-category="special">Special Items</button>
+            </div>
+            
+            <div class="inventory-items">
+                <div class="inventory-empty">
+                    <div class="empty-icon">🎒</div>
+                    <h3>Your inventory is empty</h3>
+                    <p>Purchase items from the shop to fill your inventory!</p>
+                    <button class="go-to-shop-btn" onclick="showScreen('shop-screen')">Go to Shop</button>
+                </div>
+            </div>
+            
+            <div class="inventory-footer">
+                <!-- Tip removed as requested -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Screen -->
+    <div id="achievements-screen" class="screen hidden">
+        <div class="header">
+            <h1>Achievements</h1>
+            <button id="back-to-game-from-achievements-btn">Back to Game</button>
+        </div>
+        
+        <div class="achievements-container">
+            <div class="achievements-header">
+                <h2>Your Achievements</h2>
+                <p>Complete milestones to earn bonus rolls and rewards!</p>
+            </div>
+            
+            <div class="achievements-grid" id="achievements-grid">
+                <!-- Achievements will be dynamically populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Friends Modal -->
+    <div id="friends-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" id="close-friends-modal">&times;</span>
+            <h2>Friends</h2>
+            <div id="friends-list-section">
+                <h3>Your Friends</h3>
+                <ul id="friends-list"></ul>
+            </div>
+            <div id="friend-requests-section">
+                <h3>Pending Friend Requests</h3>
+                <ul id="friend-requests-list"></ul>
+            </div>
+            <div id="add-friend-section">
+                <h3>Add Friend</h3>
+                <input type="text" id="add-friend-username" placeholder="Enter username">
+                <button id="add-friend-btn">Send Request</button>
+                <div id="add-friend-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div id="chat-window" class="chat-window hidden">
+        <div id="chat-header" class="chat-header">Chat <span id="chat-close" class="chat-close">×</span></div>
+        <div id="chat-friends-list" class="chat-friends-list"></div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <form id="chat-form" class="chat-form">
+            <input id="chat-input" class="chat-input" type="text" placeholder="Type a message..." autocomplete="off" />
+            <button type="submit" class="chat-send-btn">Send</button>
+        </form>
+    </div>
+    <button id="chat-toggle" class="chat-toggle hidden">💬</button>
+
+    <audio id="button-hover-sound" src="sounds/Roller_Hover.wav" preload="auto"></audio>
+    <audio id="roll-hover-sound" src="sounds/Roller_Hover_Roll.wav" preload="auto"></audio>
+    <audio id="roll-click-sound" src="sounds/Roller_Roll_Normal.wav" preload="auto"></audio>
+    <audio id="roll-shiny-sound" src="sounds/Roller_Roll_Shiny.wav" preload="auto"></audio>
+    <audio id="roll-legendary-sound" src="sounds/Roller_Roll_Legendary.wav" preload="auto"></audio>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html> 
