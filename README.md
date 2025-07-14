@@ -6,10 +6,10 @@ A web-based Pokémon collection game where players can roll for Pokémon, build 
 
 - **Pokémon Rolling**: Roll for random Pokémon with different rarities
 - **Collection Management**: Track caught Pokémon, view stats, and manage your collection
-- **Friends System**: Add friends, send friend requests, and chat with them
+- **Friends System**: Add friends, send friend requests, and chat with them (WIP)
 - **Achievements**: Complete milestones to earn bonus rolls and rewards
 - **Shop System**: Purchase items to enhance your gameplay
-- **Real-time Chat**: Communicate with friends using Socket.IO
+- **Real-time Chat**: Communicate with friends using Socket.IO (WIP)
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Tech Stack
