@@ -23,7 +23,9 @@ const io = new Server(server, {
             'http://pokeroller.com:8080',
             'http://pokeroller.com',
             'https://pokeroller.com',
-            'https://pokeroller.com:8080'
+            'https://pokeroller.com:8080',
+            'http://25.59.175.155:3000',
+            'http://25.59.175.155:3001'
         ],
         credentials: true
     }
@@ -50,7 +52,9 @@ app.use(cors({
         'http://pokeroller.com:8080',
         'http://pokeroller.com',
         'https://pokeroller.com',
-        'https://pokeroller.com:8080'
+        'https://pokeroller.com:8080',
+        'http://25.59.175.155:3000',
+        'http://25.59.175.155:3001'
     ],
     credentials: true
 }));

@@ -1,11 +1,11 @@
 // API Client for communicating with the backend
 class ApiClient {
     constructor() {
-        // Change base API URL to relative path
-        const API_BASE = '/api';
-        this.baseURL = process.env.NODE_ENV === 'production' 
-            ? 'https://your-backend-url.com/api' 
-            : `${API_BASE}`;
+        // Configure API base URL to use the same hostname as the frontend
+        const currentHost = window.location.hostname;
+        const currentPort = window.location.port;
+        // Use the same hostname but port 3001 for the backend
+        this.baseURL = `http://${currentHost}:3001/api`;
         this.token = localStorage.getItem('auth-token');
     }
 
@@ -38,7 +38,17 @@ class ApiClient {
                 ...options
             };
 
+            console.log('Making API request to:', url);
             const response = await fetch(url, config);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response received:', text);
+                throw new Error('Server returned non-JSON response');
+            }
+            
             const data = await response.json();
 
             if (!response.ok) {
@@ -73,6 +83,10 @@ class ApiClient {
 
     // Game endpoints
     async saveGameProgress(gameData) {
+        console.log('Saving game progress to backend...');
+        console.log('Game data structure:', Object.keys(gameData));
+        console.log('Users in game data:', gameData.users ? Object.keys(gameData.users) : 'No users object');
+        
         return this.request('/game/save', {
             method: 'POST',
             body: JSON.stringify({ gameData })

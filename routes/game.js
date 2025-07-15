@@ -13,8 +13,22 @@ router.post('/save', auth, async (req, res) => {
             return res.status(400).json({ error: 'Game data is required' });
         }
         
-        // Update user with game data
-        req.user.updateGameData(gameData);
+        // Extract the current user's data from the gameData object
+        console.log('Saving game data for user:', req.user.username);
+        console.log('Game data structure:', Object.keys(gameData));
+        console.log('Users in game data:', gameData.users ? Object.keys(gameData.users) : 'No users object');
+        
+        const currentUserData = gameData.users && gameData.users[req.user.username];
+        
+        if (!currentUserData) {
+            console.error('User data not found for:', req.user.username);
+            return res.status(400).json({ error: 'User data not found in game data' });
+        }
+        
+        console.log('Current user data keys:', Object.keys(currentUserData));
+        
+        // Update user with their specific data
+        req.user.updateGameData(currentUserData);
         await req.user.save();
         
         res.json({

@@ -1,6 +1,7 @@
 import { STORAGE_KEYS, ELEMENT_IDS } from './config/gameConfig.js';
 import { pokemonData } from './pokemonData.js';
 import { initChat } from './chat.js';
+import apiClient from './utils/apiClient.js';
 
 // Game State
 let currentUser = null;
@@ -87,9 +88,22 @@ export function loadGameData() {
     fixExistingUsersLastLoginDate();
 }
 
-// Save game data to localStorage
-export function saveGameData() {
+// Save game data to localStorage and backend
+export async function saveGameData() {
+    // Save to localStorage for immediate access
     localStorage.setItem(STORAGE_KEYS.GAME_DATA, JSON.stringify(gameData));
+    
+    // Also save to backend if user is logged in
+    const token = localStorage.getItem('token') || localStorage.getItem('auth-token');
+    if (token && currentUser) {
+        try {
+            await apiClient.saveGameProgress(gameData);
+            console.log('Game data saved to backend successfully');
+        } catch (error) {
+            console.error('Failed to save game data to backend:', error);
+            // Don't throw error - localStorage save is still successful
+        }
+    }
 }
 
 // Get current user
@@ -276,52 +290,101 @@ export async function handleLogin() {
     }
 
     try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            // Store JWT token
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-            }
+        const data = await apiClient.login(username, password);
+                    // Store JWT token
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('auth-token', data.token); // Also store as auth-token for consistency
             
-            // Set current user and load user data
+            // Set current user
             currentUser = data.user.username;
             
-            // Initialize user data in gameData if it doesn't exist
-            if (!gameData.users[currentUser]) {
-                gameData.users[currentUser] = {
-                    username: data.user.username,
-                    avatar: data.user.avatar || 'youngster.png',
-                    coins: data.user.coins || 3,
-                    lastCoinTime: data.user.lastCoinTime || Date.now(),
-                    lastLoginDate: data.user.lastLoginDate || new Date().toDateString(),
-                    level: data.user.level || 1,
-                    xp: data.user.xp || 0,
-                    xpToNext: data.user.xpToNext || 25,
-                    cardCounts: data.user.cardCounts || {},
-                    packsOpened: data.user.packsOpened || 0,
-                    cardsCollected: data.user.cardsCollected || 0,
-                    claimedAchievements: data.user.claimedAchievements || [],
-                    completedAchievements: data.user.completedAchievements || [],
-                    equippedTitle: data.user.equippedTitle || null,
-                    favorites: data.user.favorites || [],
-                    inventory: data.user.inventory || {},
-                    recentCatches: data.user.recentCatches || []
-                };
-            } else {
-                // Update existing user data with backend data
-                Object.assign(gameData.users[currentUser], data.user);
+            // Load game data from backend
+            try {
+                const gameProgress = await apiClient.getGameProgress();
+                console.log('Backend game progress:', gameProgress);
+                
+                if (gameProgress && gameProgress.user) {
+                    // Use backend data as the source of truth
+                    const backendUserData = gameProgress.user;
+                    
+                    // Initialize or update user data with backend data
+                    gameData.users[currentUser] = {
+                        username: backendUserData.username || data.user.username,
+                        avatar: backendUserData.avatar || 'youngster.png',
+                        coins: backendUserData.coins || 3,
+                        lastCoinTime: backendUserData.lastCoinTime || Date.now(),
+                        lastLoginDate: backendUserData.lastLoginDate || new Date().toDateString(),
+                        level: backendUserData.level || 1,
+                        xp: backendUserData.xp || 0,
+                        xpToNext: backendUserData.xpToNext || 25,
+                        cardCounts: backendUserData.cardCounts || {},
+                        packsOpened: backendUserData.packsOpened || 0,
+                        cardsCollected: backendUserData.cardsCollected || 0,
+                        claimedAchievements: backendUserData.claimedAchievements || [],
+                        completedAchievements: backendUserData.completedAchievements || [],
+                        equippedTitle: backendUserData.equippedTitle || null,
+                        favorites: backendUserData.favorites || [],
+                        inventory: backendUserData.inventory || {},
+                        recentCatches: backendUserData.recentCatches || []
+                    };
+                    
+                    console.log('Game data loaded from backend successfully');
+                    console.log('User data after backend load:', gameData.users[currentUser]);
+                } else {
+                    // Fallback to local data if backend doesn't have data
+                    if (!gameData.users[currentUser]) {
+                        gameData.users[currentUser] = {
+                            username: data.user.username,
+                            avatar: data.user.avatar || 'youngster.png',
+                            coins: data.user.coins || 3,
+                            lastCoinTime: data.user.lastCoinTime || Date.now(),
+                            lastLoginDate: data.user.lastLoginDate || new Date().toDateString(),
+                            level: data.user.level || 1,
+                            xp: data.user.xp || 0,
+                            xpToNext: data.user.xpToNext || 25,
+                            cardCounts: data.user.cardCounts || {},
+                            packsOpened: data.user.packsOpened || 0,
+                            cardsCollected: data.user.cardsCollected || 0,
+                            claimedAchievements: data.user.claimedAchievements || [],
+                            completedAchievements: data.user.completedAchievements || [],
+                            equippedTitle: data.user.equippedTitle || null,
+                            favorites: data.user.favorites || [],
+                            inventory: data.user.inventory || {},
+                            recentCatches: data.user.recentCatches || []
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load game data from backend:', error);
+                // Fallback to local data if backend fails
+                if (!gameData.users[currentUser]) {
+                    gameData.users[currentUser] = {
+                        username: data.user.username,
+                        avatar: data.user.avatar || 'youngster.png',
+                        coins: data.user.coins || 3,
+                        lastCoinTime: data.user.lastCoinTime || Date.now(),
+                        lastLoginDate: data.user.lastLoginDate || new Date().toDateString(),
+                        level: data.user.level || 1,
+                        xp: data.user.xp || 0,
+                        xpToNext: data.user.xpToNext || 25,
+                        cardCounts: data.user.cardCounts || {},
+                        packsOpened: data.user.packsOpened || 0,
+                        cardsCollected: data.user.cardsCollected || 0,
+                        claimedAchievements: data.user.claimedAchievements || [],
+                        completedAchievements: data.user.completedAchievements || [],
+                        equippedTitle: data.user.equippedTitle || null,
+                        favorites: data.user.favorites || [],
+                        inventory: data.user.inventory || {},
+                        recentCatches: data.user.recentCatches || []
+                    };
+                }
             }
             
-            saveGameData();
+            // Save the loaded data to localStorage (but don't overwrite backend data)
+            localStorage.setItem(STORAGE_KEYS.GAME_DATA, JSON.stringify(gameData));
             showScreen(ELEMENT_IDS.GAME_SCREEN);
             updateGameUI();
-        } else {
-            alert(data.error || 'Invalid username or password');
         }
     } catch (error) {
         alert('Network error');
@@ -343,13 +406,7 @@ export async function handleRegister() {
 
     // Send registration request to backend
     try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (response.ok) {
+        const data = await apiClient.register(username, password);
             // Show success message
             const successElement = document.getElementById('registration-success');
             if (successElement) {
@@ -364,19 +421,6 @@ export async function handleRegister() {
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             selectedAvatar = null;
-        } else {
-            // Show error message
-            const errorElement = document.getElementById('registration-error');
-            const successElement = document.getElementById('registration-success');
-            if (successElement) successElement.classList.add('hidden');
-            if (errorElement) {
-                errorElement.classList.remove('hidden');
-                errorElement.querySelector('.error-text').textContent = data.error || 'Registration failed';
-                setTimeout(() => {
-                    errorElement.classList.add('hidden');
-                }, 4000);
-            }
-        }
     } catch (error) {
         // Show error message
         const errorElement = document.getElementById('registration-error');

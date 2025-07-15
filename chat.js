@@ -36,9 +36,24 @@ function appendMessage(message, isMe) {
 
 function setupSocket() {
     if (socket) socket.disconnect();
-    socket = io('/', {
+    
+    // Get the current hostname and use port 3001 for socket.io
+    const currentHost = window.location.hostname;
+    const socketUrl = `http://${currentHost}:3001`;
+    
+    console.log('Connecting to socket.io at:', socketUrl);
+    socket = io(socketUrl, {
         auth: { token: getToken() }
     });
+    
+    socket.on('connect', () => {
+        console.log('Socket.io connected successfully');
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('Socket.io connection error:', error);
+    });
+    
     socket.on('private_message', ({ from, message }) => {
         if (from === selectedFriendId) {
             appendMessage(message, false);
@@ -50,10 +65,18 @@ export async function initChat() {
     // Fetch friends
     const token = getToken();
     if (!token) return;
-    const res = await fetchFriends(token);
-    friends = res.friends || [];
-    renderFriendsList();
-    setupSocket();
+    
+    try {
+        const res = await fetchFriends(token);
+        friends = res.friends || [];
+        renderFriendsList();
+        setupSocket();
+    } catch (error) {
+        console.error('Failed to initialize chat:', error);
+        friends = [];
+        renderFriendsList();
+        // Don't setup socket if we can't fetch friends
+    }
 
     // UI logic
     const chatWindow = document.getElementById('chat-window');

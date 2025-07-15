@@ -432,16 +432,34 @@ function setupEventListeners() {
     }
 
     if (addFriendBtn && addFriendUsername) {
+        console.log('Add friend button found, setting up event listener');
         addFriendBtn.addEventListener('click', async () => {
+            console.log('Add friend button clicked');
             const username = addFriendUsername.value.trim();
-            if (!username) return;
+            if (!username) {
+                console.log('No username entered');
+                return;
+            }
+            console.log('Sending friend request for username:', username);
             addFriendBtn.disabled = true;
             addFriendMessage.textContent = '';
-            const res = await friendsManager.sendFriendRequest(username, currentFriendsToken);
-            addFriendMessage.textContent = res.message || res.error || '';
-            addFriendBtn.disabled = false;
-            addFriendUsername.value = '';
-            await renderFriendsUI(currentFriendsToken);
+            try {
+                const res = await friendsManager.sendFriendRequest(username, currentFriendsToken);
+                console.log('Friend request response:', res);
+                addFriendMessage.textContent = res.message || res.error || '';
+                addFriendBtn.disabled = false;
+                addFriendUsername.value = '';
+                await renderFriendsUI(currentFriendsToken);
+            } catch (error) {
+                console.error('Error sending friend request:', error);
+                addFriendMessage.textContent = 'Error sending friend request';
+                addFriendBtn.disabled = false;
+            }
+        });
+    } else {
+        console.error('Add friend elements not found:', {
+            addFriendBtn: !!addFriendBtn,
+            addFriendUsername: !!addFriendUsername
         });
     }
 
@@ -518,8 +536,8 @@ function setupRollButtonListeners() {
                 rollClickSound.currentTime = 0;
                 rollClickSound.play();
             }
-            setTimeout(() => {
-                openPack(
+            setTimeout(async () => {
+                await openPack(
                     getCurrentUser(),
                     getGameData(),
                     saveGameData,

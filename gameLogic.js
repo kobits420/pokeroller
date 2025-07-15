@@ -1,7 +1,7 @@
 import { pokemonData } from './pokemonData.js';
 
 // Core game logic: open a pack and generate cards
-function openPack(currentUser, gameData, saveGameData, displayPackCards, updateGameUI, cards) {
+async function openPack(currentUser, gameData, saveGameData, displayPackCards, updateGameUI, cards) {
     if (!currentUser) return;
 
     const userData = gameData.users[currentUser];
@@ -29,7 +29,7 @@ function openPack(currentUser, gameData, saveGameData, displayPackCards, updateG
     if (userData.coins < 0) {
         console.warn('Invalid coin count detected, resetting to 0');
         userData.coins = 0;
-        saveGameData();
+        await saveGameData();
         return;
     }
     
@@ -74,7 +74,7 @@ function openPack(currentUser, gameData, saveGameData, displayPackCards, updateG
         userData.xp = 0;
         userData.coins = (userData.coins || 0) + 2;
         leveledUp = true;
-        saveGameData();
+        await saveGameData();
         updateGameUI();
         // Level up dialog will be shown after roll completes
     }
@@ -128,7 +128,7 @@ function openPack(currentUser, gameData, saveGameData, displayPackCards, updateG
     console.log('Recent catches after roll:', userData.recentCatches.length, 'items');
     console.log('First 5 recent catches:', userData.recentCatches.slice(0, 5).map(c => c.name));
 
-    saveGameData();
+    await saveGameData();
     
     // Store level up state for the overlay to check
     if (leveledUp) {
@@ -139,10 +139,10 @@ function openPack(currentUser, gameData, saveGameData, displayPackCards, updateG
     }
     
     // Check for achievements
-    import('./achievements.js').then(module => {
+    import('./achievements.js').then(async module => {
         const newlyCompleted = module.checkAndAwardAchievements(userData, gameData, currentUser);
         if (newlyCompleted.length > 0) {
-            saveGameData();
+            await saveGameData();
             updateGameUI();
             
             // Show achievement notification

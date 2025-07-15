@@ -1,60 +1,57 @@
 // friendsManager.js
-
-const API_BASE = '/api/user/friends';
+import apiClient from './utils/apiClient.js';
 
 export async function fetchFriends(token) {
-    const res = await fetch(`${API_BASE}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return res.json();
+    console.log('fetchFriends called with token:', token ? token.substring(0, 20) + '...' : 'null');
+    apiClient.setToken(token);
+    try {
+        const result = await apiClient.request('/user/friends');
+        console.log('fetchFriends result:', result);
+        return result;
+    } catch (error) {
+        console.error('fetchFriends error:', error);
+        throw error;
+    }
 }
 
 export async function fetchFriendRequests(token) {
-    const res = await fetch(`${API_BASE}/requests`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return res.json();
+    apiClient.setToken(token);
+    return apiClient.request('/user/friends/requests');
 }
 
 export async function sendFriendRequest(username, token) {
-    const res = await fetch(`${API_BASE}/request`, {
+    apiClient.setToken(token);
+    return apiClient.request('/user/friends/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ username })
     });
-    return res.json();
 }
 
 export async function acceptFriendRequest(userId, token) {
-    const res = await fetch(`${API_BASE}/accept`, {
+    apiClient.setToken(token);
+    return apiClient.request('/user/friends/accept', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId })
     });
-    return res.json();
 }
 
 export async function declineFriendRequest(userId, token) {
-    const res = await fetch(`${API_BASE}/decline`, {
+    apiClient.setToken(token);
+    return apiClient.request('/user/friends/decline', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId })
     });
-    return res.json();
 }
 
 export async function removeFriend(userId, token) {
-    const res = await fetch(`${API_BASE}/remove`, {
+    apiClient.setToken(token);
+    return apiClient.request('/user/friends/remove', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId })
     });
-    return res.json();
 }
 
 export async function fetchNotifications(token) {
-    const res = await fetch('/api/user/notifications', {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return res.json();
+    apiClient.setToken(token);
+    return apiClient.request('/user/notifications');
 } 
